@@ -1,0 +1,11 @@
+timess=0
+ress=[]
+def get_times():
+	timess=timess+1
+	print timess
+	return timess
+def set_res(jso):
+	res.append(jso)
+def get_json():
+	print 'direct'
+	return ress[timess-6]
