@@ -3,8 +3,11 @@ import json
 from urlTools import urlTools 
 import requests
 s = requests.Session()
+saved_data={}
 def get_dict(url):
 	offset=0
+	if saved_data.has_key(url):
+		return saved_data[url]
 	data=s.get(url).json()
 	if data !=[]:
 		new_data=data
@@ -16,6 +19,7 @@ def get_dict(url):
 			data['entities'].append(new_data['entities'])
 			if offset>=110000:
 				break
+	saved_data[url]=data
 	return data
 
 if __name__ == '__main__':
