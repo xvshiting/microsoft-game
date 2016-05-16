@@ -110,11 +110,27 @@ def get_AfID_ID(data,AUID):
 			for d_AF in d_AA:
 				if str(d_AF['AuId'])==str(AUID):
 					if d_AF.has_key('AfId'):
-						if d_AF['AfId'] in AF_lis:
-							pass
-						else :
+						if d_AF['AfId'] not in AF_lis:
 							AF_lis.append(d_AF['AfId'])
 	return AF_lis,ID_lis	
+def get_dict_AfId_Id(data,AUID_list):
+	dic={}
+	for d in data:
+		if d.has_key('AA'):
+			d_AA=d['AA']
+			for d_AF in d_AA:
+				if d_AF['AuId']in AUID_list:
+					if d_AF.has_key('AfId'):
+						try :
+							d_lis=dic[d_AF['AuId']]
+							d_lis=d_lis.append(d_AF['AfId'])
+							dic[d_AF['AuId']]=d_lis
+						except:
+							dic[d_AF['AuId']]=[d_AF['AfId']]
+
+
+	return dic
+
 def id_id_get_one_hop(id1,id2,d1,d2):
 	dd1= d1['RId']
 	dd2=d2['Id']
@@ -125,15 +141,8 @@ def id_id_get_two_hop(id1,id2,d1,d2,RID_ID1):
 	#Id->AA.AuId(F.Fid/J.JId/C.CId)->Id
 	d1_list,no_1=get_sigle_id_attribute_list(d1)
 	d2_list,no_2=get_sigle_id_attribute_list(d2)
-	if len(d1_list)<len(d2_list):
-		lis_1=d1_list
-		lis_2=d2_list
-	else:
-		lis_2=d1_list
-		lis_1=d2_list
-	for d in lis_1:
-		if d in lis_2:
-			res.append([long(id1),d,long(id2)])
+	for d in set(d1_list).intersection(set(d2_list)):
+		res.append([long(id1),d,long(id2)])
 	#	Id->RId->RId
 	d1_RID=RID_id2(RID_ID1,id2)
 	for d in d1_RID:
@@ -274,27 +283,12 @@ def AUID_AUID_two_HOP(id1,id2,d1,d2):
 	# print d1
 	AFID_ID1,paperID_ID1=get_AfID_ID(d1,id1)
 	AFID_ID2,paperID_ID2=get_AfID_ID(d2,id2)
-	if len(AFID_ID1)<AFID_ID2:
-		lis_1=AFID_ID1
-		lis_2=AFID_ID2
-	else:
-		lis_2=AFID_ID1
-		lis_1=AFID_ID2
-	for d in lis_1:
-		if d in lis_2:
-			print 'AA.AuId->AA.AfId->AA.AuId'
-			res.append([long(id1),d,long(id2)])
-	#AA.AuId->Id->AA.AuId
-	if len(paperID_ID1)<len(paperID_ID2):
-		lis_1=paperID_ID1
-		lis_2=paperID_ID2
-	else:
-		lis_2=paperID_ID1
-		lis_1=paperID_ID2
-	for d in lis_1:
-		if d in lis_2:
-			print 'AA.AuId->Id->AA.AuId'
-			res.append([long(id1),d,long(id2)])
+	for d in set(AFID_ID1).intersection(set(AFID_ID2)):
+		print 'AA.AuId->AA.AfId->AA.AuId'
+		res.append([long(id1),d,long(id2)])
+	for d in set(paperID_ID1).intersection(set(paperID_ID2)):
+		print 'AA.AuId->AA.AfId->AA.AuId'
+		res.append([long(id1),d,long(id2)])
 	AUID_AUID_THREE_HOP(id1,id2,d1,d2,paperID_ID1,paperID_ID2)
 def AUID_AUID_THREE_HOP(id1,id2,d1,d2,paperID_ID1,paperID_ID2):
 	#AA.AuId->Id->RId-> AA.AuId
@@ -405,21 +399,16 @@ def ID_AUID_THREE_HOP(id1,id2,d1,d2):
 	#Id-> AA.AuId -> AA.AfId ->AA.AuId
 	AFID_ID2,paperID_ID2=get_AfID_ID(d2,id2)
 	myurl.set_attributes(['AA.AuId,AA.AfId','Id'])
-	for dd in AUID_list:
-		myurl.set_expr('Composite(AA.AuId='+str(dd)+')')
-		data=gd.get_dict(myurl.get_url())
-		dd2=data['entities']
-		AFID_ID1,paperID_ID1=get_AfID_ID(dd2,dd)
-		if len(AFID_ID1)<AFID_ID2:
-			lis_1=AFID_ID1
-			lis_2=AFID_ID2
-		else:
-			lis_2=AFID_ID1
-			lis_1=AFID_ID2
-		for d in lis_1:
-			if d in lis_2:
-				print 'Id-> AA.AuId -> AA.AfId ->AA.AuId'
-				res.append([long(id1),dd,d,long(id2)])
+	myurl.set_expr('Composite('+myurl.get_Or_AUID(AUID_list)+')')
+	data=gd.get_dict(myurl.get_url())
+	dd2=data['entities']
+	AFID_ID1=get_dict_AfId_Id(dd2,AUID_list)
+	for l in AUID_list:
+		try:
+			for d in set(AFID_ID1[l]).intersection(set(AFID_ID2)):
+				res.append([long(id1),l,d,long(id2)])
+		except:
+			pass
 def id_id_get_hop(id1,id2,d1,d2):
 	print 'id_id'
 	id_id_get_one_hop(id1,id2,d1,d2)

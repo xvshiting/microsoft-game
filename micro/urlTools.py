@@ -97,6 +97,13 @@ class urlTools:
 			for i_d in new_id:
 				ss='Or('+ss+','+"RId="+str(i_d)+')'
 		return ss
+	def get_Or_AUID(self,new_id):
+		ss='AA.AuId='+str(new_id[0])
+		if len(new_id)>1:
+			new_id=new_id[1:]
+			for i_d in new_id:
+				ss='Or('+ss+','+"AA.AuId="+str(i_d)+')'
+		return ss
 
 	
 	
